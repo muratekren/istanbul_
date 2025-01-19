@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istanbul Weather</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-wrap: wrap;
+            height: 100vh;
+        }
+
+        #left, #right {
+            height: 75%;
+        }
+
+        #left {
+            width: 70%;
+            background-color: #f7f7f7;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+        }
+
+        #right {
+            width: 30%;
+            background-color: #eaeaea;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #bottom {
+            width: 100%;
+            height: 25%;
+            background-color: #d4d4d4;
+            padding: 20px;
+            overflow-x: auto;
+            display: flex;
+            gap: 15px;
+        }
+
+        .forecast {
+            flex: 0 0 auto;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .forecast img {
+            max-width: 100%;
+        }
+    </style>
+    <script>
+        const API_KEY = "YOUR_API_KEY_HERE"; // Replace with your OpenWeather API key
+
+        // Update Istanbul local time
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            };
+            document.getElementById('time').innerText = now.toLocaleDateString('tr-TR', options).replace(/:\d{2}/, '');
+        }
+
+        // Fetch current weather data for Istanbul
+        async function fetchCurrentWeather() {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=Istanbul&units=metric&lang=tr&appid=${API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            document.getElementById('current-weather').innerHTML = `
+                <p>${data.weather[0].description.toUpperCase()}</p>
+                <p>${Math.round(data.main.temp)}°C</p>
+                <img src="http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather icon">
+            `;
+        }
+
+        // Fetch 5-day weather forecast for Istanbul
+        async function fetchForecast() {
+            const url = `https://api.openweathermap.org/data/2.5/forecast?q=Istanbul&units=metric&lang=tr&appid=${API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const forecastContainer = document.getElementById('forecast');
+            forecastContainer.innerHTML = '';
+            for (let i = 0; i < data.list.length; i += 8) {
+                const forecast = data.list[i];
+                const date = new Date(forecast.dt * 1000);
+                forecastContainer.innerHTML += `
+                    <div class="forecast">
+                        <p>${date.toLocaleDateString('tr-TR', { weekday: 'long' })}</p>
+                        <p>${Math.round(forecast.main.temp)}°C</p>
+                        <img src="http://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png" alt="Weather icon">
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            updateTime();
+            fetchCurrentWeather();
+            fetchForecast();
+            setInterval(updateTime, 60000); // Update time every minute
+        };
+    </script>
+</head>
+<body>
+    <div id="left">
+        <div id="time">Loading...</div>
+    </div>
+    <div id="right">
+        <div id="current-weather">Loading weather...</div>
+    </div>
+    <div id="bottom">
+        <div id="forecast">Loading forecast...</div>
+    </div>
+</body>
+</html>
